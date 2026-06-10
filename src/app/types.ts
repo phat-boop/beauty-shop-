@@ -27,6 +27,12 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  count: number;
+}
+
 export interface Review {
   id: number;
   productId: number;
@@ -37,6 +43,15 @@ export interface Review {
   images?: string[];
 }
 
+export interface Address {
+  fullName: string;
+  phone: string;
+  address: string;
+  ward: string;
+  district: string;
+  city: string;
+}
+
 export interface Order {
   id: string;
   customerId: number;
@@ -45,20 +60,11 @@ export interface Order {
   shipping: number;
   discount: number;
   total: number;
-  status: 'pending' | 'processing' | 'shipping' | 'delivered' | 'cancelled';
+  status: "pending" | "processing" | "shipping" | "delivered" | "cancelled";
   paymentMethod: string;
   shippingAddress: Address;
   createdAt: Date;
   estimatedDelivery?: Date;
-}
-
-export interface Address {
-  fullName: string;
-  phone: string;
-  address: string;
-  ward: string;
-  district: string;
-  city: string;
 }
 
 export interface User {
@@ -74,7 +80,7 @@ export interface User {
 export interface Coupon {
   code: string;
   discount: number;
-  type: 'percentage' | 'fixed';
+  type: "percentage" | "fixed";
   minOrder: number;
   expiryDate: Date;
   description: string;

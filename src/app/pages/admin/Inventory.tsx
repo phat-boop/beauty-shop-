@@ -1,104 +1,142 @@
-import { AlertTriangle, Package } from "lucide-react";
+import { AlertTriangle, PackageCheck, Search, Warehouse } from "lucide-react";
+import { useMemo, useState } from "react";
 import { products } from "../../data/products";
 
 export default function AdminInventory() {
-  const lowStockProducts = products.filter((p) => p.stock < 50);
+  const [query, setQuery] = useState("");
+
+  const filteredProducts = useMemo(() => {
+    const keyword = query.toLowerCase().trim();
+
+    if (!keyword) return products;
+
+    return products.filter(
+      (product) =>
+        product.nameVi.toLowerCase().includes(keyword) ||
+        product.brand.toLowerCase().includes(keyword)
+    );
+  }, [query]);
+
+  const lowStockProducts = products.filter(
+    (product) => product.stock > 0 && product.stock <= 100
+  );
+
+  const totalStock = products.reduce((sum, product) => sum + product.stock, 0);
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Quản Lý Kho Hàng</h1>
-        <p className="text-muted-foreground">Theo dõi tồn kho sản phẩm</p>
+      <div>
+        <p className="font-semibold uppercase tracking-[0.25em] text-rose-600">
+          Operations
+        </p>
+        <h1 className="mt-2 text-3xl font-bold text-slate-950">
+          Quản lý kho hàng
+        </h1>
       </div>
 
-      {/* Alert */}
+      <div className="mt-8 grid gap-5 md:grid-cols-3">
+        <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <Warehouse className="size-8 text-blue-600" />
+          <p className="mt-4 text-slate-500">Tổng tồn kho</p>
+          <strong className="mt-2 block text-3xl">{totalStock}</strong>
+        </article>
+
+        <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <AlertTriangle className="size-8 text-amber-600" />
+          <p className="mt-4 text-slate-500">Sản phẩm sắp hết</p>
+          <strong className="mt-2 block text-3xl">
+            {lowStockProducts.length}
+          </strong>
+        </article>
+
+        <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <PackageCheck className="size-8 text-emerald-600" />
+          <p className="mt-4 text-slate-500">Đang hoạt động</p>
+          <strong className="mt-2 block text-3xl">{products.length}</strong>
+        </article>
+      </div>
+
       {lowStockProducts.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
-          <div className="flex items-center space-x-3">
-            <AlertTriangle className="w-6 h-6 text-red-600" />
-            <div>
-              <h3 className="text-lg text-red-600 mb-1">Cảnh Báo Tồn Kho Thấp</h3>
-              <p className="text-red-600 text-sm">
-                {lowStockProducts.length} sản phẩm sắp hết hàng cần nhập thêm
-              </p>
-            </div>
+        <section className="mt-8 rounded-3xl border border-amber-200 bg-amber-50 p-6">
+          <h2 className="flex items-center gap-2 text-xl font-bold text-amber-800">
+            <AlertTriangle className="size-6" />
+            Cảnh báo tồn kho thấp
+          </h2>
+
+          <div className="mt-5 grid gap-3">
+            {lowStockProducts.map((product) => (
+              <article
+                key={product.id}
+                className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-4"
+              >
+                <div>
+                  <h3 className="font-bold">{product.nameVi}</h3>
+                  <p className="text-sm text-slate-500">{product.brand}</p>
+                </div>
+                <strong className="text-amber-700">
+                  Còn {product.stock} sản phẩm
+                </strong>
+              </article>
+            ))}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Inventory Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg p-6 border border-border">
-          <p className="text-sm text-muted-foreground mb-2">Tổng Sản Phẩm</p>
-          <p className="text-3xl">{products.length}</p>
+      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="relative max-w-lg">
+          <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Tìm kiếm tồn kho..."
+            className="w-full rounded-full border border-slate-200 py-3 pl-12 pr-4 outline-none focus:border-rose-300"
+          />
         </div>
-        <div className="bg-white rounded-lg p-6 border border-border">
-          <p className="text-sm text-muted-foreground mb-2">Tổng Tồn Kho</p>
-          <p className="text-3xl">
-            {products.reduce((sum, p) => sum + p.stock, 0)}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg p-6 border border-border">
-          <p className="text-sm text-muted-foreground mb-2">Sắp Hết Hàng</p>
-          <p className="text-3xl text-red-600">{lowStockProducts.length}</p>
-        </div>
-      </div>
 
-      {/* Inventory Table */}
-      <div className="bg-white rounded-lg border border-border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-border">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm">Sản Phẩm</th>
-                <th className="px-6 py-4 text-left text-sm">Danh Mục</th>
-                <th className="px-6 py-4 text-left text-sm">Tồn Kho</th>
-                <th className="px-6 py-4 text-left text-sm">Đã Bán</th>
-                <th className="px-6 py-4 text-left text-sm">Trạng Thái</th>
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left">
+            <thead>
+              <tr className="border-b border-slate-100 text-sm text-slate-500">
+                <th className="py-3">Sản phẩm</th>
+                <th>Thương hiệu</th>
+                <th>Danh mục</th>
+                <th>Tồn kho</th>
+                <th>Đã bán</th>
+                <th>Trạng thái</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
-              {products.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <img
-                        src={product.image}
-                        alt={product.nameVi}
-                        className="w-12 h-12 rounded object-cover"
-                      />
-                      <div>
-                        <p className="font-medium">{product.nameVi}</p>
-                        <p className="text-sm text-muted-foreground">{product.brand}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm">{product.category}</td>
-                  <td className="px-6 py-4">
-                    <span className={product.stock < 50 ? "text-red-600" : ""}>
-                      {product.stock}
+
+            <tbody>
+              {filteredProducts.map((product) => (
+                <tr key={product.id} className="border-b border-slate-100">
+                  <td className="py-4 font-bold">{product.nameVi}</td>
+                  <td>{product.brand}</td>
+                  <td>{product.category}</td>
+                  <td>{product.stock}</td>
+                  <td>{product.sold}</td>
+                  <td>
+                    <span
+                      className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                        product.stock > 100
+                          ? "bg-emerald-50 text-emerald-700"
+                          : product.stock > 0
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-red-50 text-red-700"
+                      }`}
+                    >
+                      {product.stock > 100
+                        ? "An toàn"
+                        : product.stock > 0
+                          ? "Sắp hết"
+                          : "Hết hàng"}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm">{product.sold}</td>
-                  <td className="px-6 py-4">
-                    {product.stock < 50 ? (
-                      <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-600 flex items-center w-fit space-x-1">
-                        <AlertTriangle className="w-3 h-3" />
-                        <span>Sắp hết</span>
-                      </span>
-                    ) : (
-                      <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-600 flex items-center w-fit space-x-1">
-                        <Package className="w-3 h-3" />
-                        <span>Đủ hàng</span>
-                      </span>
-                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

@@ -1,16 +1,16 @@
-import { Outlet, Link, useLocation } from "react-router";
+import { useState } from "react";
+import { Link, NavLink, Outlet, useLocation } from "react-router";
 import {
-  LayoutDashboard,
-  Package,
+  BarChart3,
   FolderTree,
+  LayoutDashboard,
+  Menu,
+  Package,
   ShoppingCart,
   Users,
-  BarChart3,
   Warehouse,
-  Menu,
   X,
 } from "lucide-react";
-import { useState } from "react";
 
 const navItems = [
   { path: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -26,93 +26,103 @@ export default function AdminLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside
-        className={`fixed lg:sticky top-0 left-0 z-40 h-screen w-64 bg-white border-r border-border transition-transform ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0`}
-      >
-        <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-border flex items-center justify-between">
-            <h1 className="text-xl">
-              Beauty<span className="text-rose-600">Admin</span>
-            </h1>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <nav className="flex-1 p-4 space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                location.pathname === item.path ||
-                (item.path !== "/admin" &&
-                  location.pathname.startsWith(item.path));
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-rose-50 text-rose-600"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-          <div className="p-4 border-t border-border">
-            <Link
-              to="/"
-              className="flex items-center justify-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Về Trang Chủ
-            </Link>
-          </div>
-        </div>
-      </aside>
+  const isActivePath = (path: string) =>
+    location.pathname === path ||
+    (path !== "/admin" && location.pathname.startsWith(path));
 
-      {/* Backdrop */}
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-950">
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+        <button
+          type="button"
+          aria-label="Đóng menu"
           onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
         />
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-20 bg-white border-b border-border px-6 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm">Admin User</p>
-                <p className="text-xs text-muted-foreground">
-                  admin@beautyshop.vn
-                </p>
-              </div>
-              <div className="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center">
-                <span className="text-rose-600">A</span>
-              </div>
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-slate-200 bg-white transition-transform lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex h-20 items-center justify-between border-b border-slate-200 px-6">
+          <Link to="/admin" className="text-2xl font-bold text-rose-700">
+            Beauty Admin
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+            aria-label="Đóng menu"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+
+        <nav className="grid gap-2 p-4">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActivePath(item.path);
+
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === "/admin"}
+                onClick={() => setSidebarOpen(false)}
+                className={`flex items-center gap-3 rounded-2xl px-4 py-3 font-medium transition ${
+                  active
+                    ? "bg-rose-50 text-rose-700"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                }`}
+              >
+                <Icon className="size-5" />
+                {item.label}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        <div className="absolute bottom-0 left-0 right-0 border-t border-slate-200 p-4">
+          <Link
+            to="/"
+            className="flex justify-center rounded-full border border-rose-200 px-4 py-3 font-semibold text-rose-700 hover:bg-rose-50"
+          >
+            Về trang chủ
+          </Link>
+        </div>
+      </aside>
+
+      <div className="lg:pl-72">
+        <header className="sticky top-0 z-20 flex h-20 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:px-8">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+            aria-label="Mở menu"
+          >
+            <Menu className="size-6" />
+          </button>
+
+          <div>
+            <p className="text-sm text-slate-500">Admin Panel</p>
+            <h1 className="font-bold">BeautyShop Management</h1>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden text-right sm:block">
+              <p className="font-semibold">Admin User</p>
+              <p className="text-sm text-slate-500">admin@beautyshop.vn</p>
+            </div>
+            <div className="grid size-11 place-items-center rounded-full bg-rose-100 font-bold text-rose-700">
+              A
             </div>
           </div>
         </header>
-        <main className="flex-1 p-6">
+
+        <main className="p-4 lg:p-8">
           <Outlet />
         </main>
       </div>

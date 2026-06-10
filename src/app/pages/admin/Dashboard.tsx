@@ -1,11 +1,45 @@
-import { TrendingUp, ShoppingBag, Users, DollarSign, Package, Eye } from "lucide-react";
+import {
+  DollarSign,
+  Eye,
+  Package,
+  ShoppingBag,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+
+const formatPrice = (value: number) =>
+  new Intl.NumberFormat("vi-VN").format(value) + "₫";
 
 export default function AdminDashboard() {
   const stats = [
-    { label: "Doanh Thu Tháng", value: "128,500,000₫", change: "+12.5%", icon: DollarSign, color: "bg-green-100 text-green-600" },
-    { label: "Đơn Hàng", value: "342", change: "+8.2%", icon: ShoppingBag, color: "bg-blue-100 text-blue-600" },
-    { label: "Khách Hàng", value: "1,234", change: "+15.3%", icon: Users, color: "bg-purple-100 text-purple-600" },
-    { label: "Sản Phẩm", value: "156", change: "+5", icon: Package, color: "bg-orange-100 text-orange-600" },
+    {
+      label: "Doanh thu tháng",
+      value: "128,500,000₫",
+      change: "+12.5%",
+      icon: DollarSign,
+      color: "bg-emerald-50 text-emerald-700",
+    },
+    {
+      label: "Đơn hàng",
+      value: "342",
+      change: "+8.2%",
+      icon: ShoppingBag,
+      color: "bg-blue-50 text-blue-700",
+    },
+    {
+      label: "Khách hàng",
+      value: "1,234",
+      change: "+15.3%",
+      icon: Users,
+      color: "bg-purple-50 text-purple-700",
+    },
+    {
+      label: "Sản phẩm",
+      value: "156",
+      change: "+5",
+      icon: Package,
+      color: "bg-orange-50 text-orange-700",
+    },
   ];
 
   const recentOrders = [
@@ -18,83 +52,106 @@ export default function AdminDashboard() {
   const topProducts = [
     { name: "Kem Dưỡng Ẩm Cao Cấp", sold: 3420, revenue: 4275000000 },
     { name: "Serum Vitamin C", sold: 5678, revenue: 5053420000 },
-    { name: "Bộ Cọ Trang Điểm", sold: 4567, revenue: 6622150000 },
+    { name: "Bộ Trang Điểm Cao Cấp", sold: 1234, revenue: 2899900000 },
   ];
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">Tổng quan hoạt động kinh doanh</p>
+      <div>
+        <p className="font-semibold uppercase tracking-[0.25em] text-rose-600">
+          Overview
+        </p>
+        <h1 className="mt-2 text-3xl font-bold text-slate-950">Dashboard</h1>
+        <p className="mt-2 text-slate-500">Tổng quan hoạt động kinh doanh.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
+
           return (
-            <div key={stat.label} className="bg-white rounded-lg p-6 border border-border">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 rounded-lg ${stat.color} flex items-center justify-center`}>
-                  <Icon className="w-6 h-6" />
+            <article
+              key={stat.label}
+              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className={`rounded-2xl p-3 ${stat.color}`}>
+                  <Icon className="size-6" />
                 </div>
-                <span className="text-sm text-green-600">{stat.change}</span>
+                <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                  <TrendingUp className="size-4" />
+                  {stat.change}
+                </span>
               </div>
-              <p className="text-2xl mb-1">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-            </div>
+              <strong className="mt-5 block text-3xl">{stat.value}</strong>
+              <p className="mt-1 text-slate-500">{stat.label}</p>
+            </article>
           );
         })}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent Orders */}
-        <div className="bg-white rounded-lg p-6 border border-border">
-          <h2 className="text-xl mb-6">Đơn Hàng Gần Đây</h2>
-          <div className="space-y-4">
-            {recentOrders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium mb-1">{order.id}</p>
-                  <p className="text-sm text-muted-foreground">{order.customer}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-rose-600 mb-1">{order.total.toLocaleString()}₫</p>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    order.status === "Đã giao"
-                      ? "bg-green-100 text-green-600"
-                      : order.status === "Đang giao"
-                      ? "bg-blue-100 text-blue-600"
-                      : "bg-yellow-100 text-yellow-600"
-                  }`}>
-                    {order.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+      <div className="mt-8 grid gap-8 xl:grid-cols-[1.4fr_1fr]">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold">Đơn hàng gần đây</h2>
+            <Eye className="size-5 text-slate-400" />
           </div>
-        </div>
 
-        {/* Top Products */}
-        <div className="bg-white rounded-lg p-6 border border-border">
-          <h2 className="text-xl mb-6">Sản Phẩm Bán Chạy</h2>
-          <div className="space-y-4">
-            {topProducts.map((product, idx) => (
-              <div key={idx} className="p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium">{product.name}</p>
-                  <span className="text-xs bg-rose-100 text-rose-600 px-2 py-1 rounded-full">
-                    #{idx + 1}
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left">
+              <thead>
+                <tr className="border-b border-slate-100 text-sm text-slate-500">
+                  <th className="py-3">Mã đơn</th>
+                  <th>Khách hàng</th>
+                  <th>Ngày</th>
+                  <th>Tổng</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.map((order) => (
+                  <tr key={order.id} className="border-b border-slate-100">
+                    <td className="py-4 font-semibold">{order.id}</td>
+                    <td>{order.customer}</td>
+                    <td>{order.date}</td>
+                    <td className="font-semibold">{formatPrice(order.total)}</td>
+                    <td>
+                      <span className="rounded-full bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-700">
+                        {order.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-bold">Sản phẩm bán chạy</h2>
+
+          <div className="mt-5 space-y-4">
+            {topProducts.map((product, index) => (
+              <article
+                key={product.name}
+                className="rounded-2xl border border-slate-100 p-4"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="font-bold">{product.name}</h3>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold">
+                    #{index + 1}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Đã bán: {product.sold}</span>
-                  <span className="text-rose-600">{product.revenue.toLocaleString()}₫</span>
-                </div>
-              </div>
+                <p className="mt-2 text-sm text-slate-500">
+                  Đã bán: {product.sold.toLocaleString("vi-VN")}
+                </p>
+                <p className="mt-1 font-bold text-rose-700">
+                  {formatPrice(product.revenue)}
+                </p>
+              </article>
             ))}
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

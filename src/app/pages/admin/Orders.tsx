@@ -1,110 +1,111 @@
-import { useState } from "react";
-import { Search, Eye, Download } from "lucide-react";
+import { Eye, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+
+const formatPrice = (value: number) =>
+  new Intl.NumberFormat("vi-VN").format(value) + "₫";
 
 const orders = [
-  { id: "DH001", customer: "Nguyễn Văn A", email: "nguyenvana@email.com", total: 1250000, status: "Đang giao", date: "2026-06-04 10:30", items: 3 },
-  { id: "DH002", customer: "Trần Thị B", email: "tranthib@email.com", total: 890000, status: "Đã giao", date: "2026-06-04 09:15", items: 2 },
-  { id: "DH003", customer: "Lê Văn C", email: "levanc@email.com", total: 2350000, status: "Đang xử lý", date: "2026-06-03 16:45", items: 5 },
-  { id: "DH004", customer: "Phạm Thị D", email: "phamthid@email.com", total: 680000, status: "Đã giao", date: "2026-06-03 14:20", items: 1 },
-  { id: "DH005", customer: "Hoàng Văn E", email: "hoangvane@email.com", total: 1450000, status: "Đã hủy", date: "2026-06-02 11:30", items: 4 },
+  {
+    id: "DH001",
+    customer: "Nguyễn Văn A",
+    email: "a@example.com",
+    total: 1250000,
+    status: "Đang giao",
+    payment: "COD",
+    date: "2026-06-04",
+  },
+  {
+    id: "DH002",
+    customer: "Trần Thị B",
+    email: "b@example.com",
+    total: 890000,
+    status: "Đã giao",
+    payment: "Bank Transfer",
+    date: "2026-06-04",
+  },
+  {
+    id: "DH003",
+    customer: "Lê Văn C",
+    email: "c@example.com",
+    total: 2350000,
+    status: "Đang xử lý",
+    payment: "COD",
+    date: "2026-06-03",
+  },
 ];
 
 export default function AdminOrders() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [query, setQuery] = useState("");
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredOrders = useMemo(() => {
+    const keyword = query.toLowerCase().trim();
+
+    if (!keyword) return orders;
+
+    return orders.filter(
+      (order) =>
+        order.id.toLowerCase().includes(keyword) ||
+        order.customer.toLowerCase().includes(keyword) ||
+        order.email.toLowerCase().includes(keyword) ||
+        order.status.toLowerCase().includes(keyword)
+    );
+  }, [query]);
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl mb-2">Quản Lý Đơn Hàng</h1>
-          <p className="text-muted-foreground">Tổng {orders.length} đơn hàng</p>
-        </div>
-        <button className="flex items-center space-x-2 bg-rose-600 text-white px-6 py-3 rounded-lg hover:bg-rose-700 transition-colors">
-          <Download className="w-5 h-5" />
-          <span>Xuất Excel</span>
-        </button>
+      <div>
+        <p className="font-semibold uppercase tracking-[0.25em] text-rose-600">
+          Sales
+        </p>
+        <h1 className="mt-2 text-3xl font-bold text-slate-950">
+          Quản lý đơn hàng
+        </h1>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg p-6 border border-border mb-6">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm đơn hàng..."
-              className="w-full pl-12 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-          >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="Đang xử lý">Đang xử lý</option>
-            <option value="Đang giao">Đang giao</option>
-            <option value="Đã giao">Đã giao</option>
-            <option value="Đã hủy">Đã hủy</option>
-          </select>
+      <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="relative max-w-lg">
+          <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Tìm theo mã đơn, khách hàng, email..."
+            className="w-full rounded-full border border-slate-200 py-3 pl-12 pr-4 outline-none focus:border-rose-300"
+          />
         </div>
-      </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-lg border border-border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-border">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm">Mã Đơn</th>
-                <th className="px-6 py-4 text-left text-sm">Khách Hàng</th>
-                <th className="px-6 py-4 text-left text-sm">Ngày Đặt</th>
-                <th className="px-6 py-4 text-left text-sm">Số SP</th>
-                <th className="px-6 py-4 text-left text-sm">Tổng Tiền</th>
-                <th className="px-6 py-4 text-left text-sm">Trạng Thái</th>
-                <th className="px-6 py-4 text-right text-sm">Thao Tác</th>
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full min-w-[820px] text-left">
+            <thead>
+              <tr className="border-b border-slate-100 text-sm text-slate-500">
+                <th className="py-3">Mã đơn</th>
+                <th>Khách hàng</th>
+                <th>Email</th>
+                <th>Ngày</th>
+                <th>Thanh toán</th>
+                <th>Tổng</th>
+                <th>Trạng thái</th>
+                <th className="text-right">Chi tiết</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+
+            <tbody>
               {filteredOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium">{order.id}</td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="font-medium">{order.customer}</p>
-                      <p className="text-sm text-muted-foreground">{order.email}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm">{order.date}</td>
-                  <td className="px-6 py-4 text-sm">{order.items}</td>
-                  <td className="px-6 py-4 text-sm text-rose-600">{order.total.toLocaleString()}₫</td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      order.status === "Đã giao"
-                        ? "bg-green-100 text-green-600"
-                        : order.status === "Đang giao"
-                        ? "bg-blue-100 text-blue-600"
-                        : order.status === "Đang xử lý"
-                        ? "bg-yellow-100 text-yellow-600"
-                        : "bg-red-100 text-red-600"
-                    }`}>
+                <tr key={order.id} className="border-b border-slate-100">
+                  <td className="py-4 font-bold">{order.id}</td>
+                  <td>{order.customer}</td>
+                  <td>{order.email}</td>
+                  <td>{order.date}</td>
+                  <td>{order.payment}</td>
+                  <td className="font-semibold">{formatPrice(order.total)}</td>
+                  <td>
+                    <span className="rounded-full bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-700">
                       {order.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end">
-                      <button className="p-2 hover:bg-blue-50 rounded text-blue-600">
-                        <Eye className="w-4 h-4" />
+                  <td>
+                    <div className="flex justify-end">
+                      <button className="rounded-full p-2 text-slate-500 hover:bg-slate-100">
+                        <Eye className="size-5" />
                       </button>
                     </div>
                   </td>
@@ -112,6 +113,12 @@ export default function AdminOrders() {
               ))}
             </tbody>
           </table>
+
+          {filteredOrders.length === 0 && (
+            <div className="py-12 text-center text-slate-500">
+              Không tìm thấy đơn hàng phù hợp.
+            </div>
+          )}
         </div>
       </div>
     </div>

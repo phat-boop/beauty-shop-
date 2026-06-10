@@ -1,168 +1,177 @@
+import { Heart, MapPin, Package, Settings, User } from "lucide-react";
 import { useState } from "react";
-import { User, Package, MapPin, Heart, Settings } from "lucide-react";
+
+const tabs = [
+  { id: "profile", label: "Thông Tin Cá Nhân", icon: User },
+  { id: "orders", label: "Đơn Hàng", icon: Package },
+  { id: "addresses", label: "Địa Chỉ", icon: MapPin },
+  { id: "wishlist", label: "Yêu Thích", icon: Heart },
+  { id: "settings", label: "Cài Đặt", icon: Settings },
+];
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl mb-8">Tài Khoản Của Tôi</h1>
+    <section className="mx-auto max-w-7xl px-4 py-12">
+      <h1 className="text-4xl font-bold text-stone-950">Tài khoản của tôi</h1>
 
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg p-6">
-              <div className="flex flex-col items-center mb-6">
-                <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center text-rose-600 text-2xl mb-3">
-                  N
-                </div>
-                <h3 className="mb-1">Nguyễn Văn A</h3>
-                <p className="text-sm text-muted-foreground">nguyenvana@email.com</p>
-              </div>
-              <nav className="space-y-1">
-                {[
-                  { id: "profile", label: "Thông Tin Cá Nhân", icon: User },
-                  { id: "orders", label: "Đơn Hàng", icon: Package },
-                  { id: "addresses", label: "Địa Chỉ", icon: MapPin },
-                  { id: "wishlist", label: "Yêu Thích", icon: Heart },
-                  { id: "settings", label: "Cài Đặt", icon: Settings },
-                ].map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                        activeTab === tab.id
-                          ? "bg-rose-50 text-rose-600"
-                          : "hover:bg-gray-50"
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span>{tab.label}</span>
-                    </button>
-                  );
-                })}
-              </nav>
+      <div className="mt-8 grid gap-8 lg:grid-cols-[280px_1fr]">
+        <aside className="h-fit rounded-3xl border border-rose-100 bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-4 border-b border-rose-100 pb-6">
+            <div className="grid size-14 place-items-center rounded-full bg-rose-100 text-xl font-bold text-rose-700">
+              N
+            </div>
+            <div>
+              <h2 className="font-bold">Nguyễn Văn A</h2>
+              <p className="text-sm text-stone-500">nguyenvana@email.com</p>
             </div>
           </div>
 
-          {/* Content */}
-          <div className="lg:col-span-3">
-            {activeTab === "profile" && (
-              <div className="bg-white rounded-lg p-8">
-                <h2 className="text-2xl mb-6">Thông Tin Cá Nhân</h2>
-                <form className="grid gap-6">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block mb-2">Họ và tên</label>
-                      <input
-                        type="text"
-                        defaultValue="Nguyễn Văn A"
-                        className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block mb-2">Số điện thoại</label>
-                      <input
-                        type="tel"
-                        defaultValue="0123456789"
-                        className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block mb-2">Email</label>
-                    <input
-                      type="email"
-                      defaultValue="nguyenvana@email.com"
-                      className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                    />
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block mb-2">Ngày sinh</label>
-                      <input
-                        type="date"
-                        defaultValue="1990-01-01"
-                        className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block mb-2">Giới tính</label>
-                      <select className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500">
-                        <option>Nam</option>
-                        <option>Nữ</option>
-                        <option>Khác</option>
-                      </select>
-                    </div>
-                  </div>
-                  <button
-                    type="submit"
-                    className="bg-rose-600 text-white px-8 py-3 rounded-lg hover:bg-rose-700 transition-colors"
+          <nav className="mt-6 grid gap-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition ${
+                    activeTab === tab.id
+                      ? "bg-rose-50 text-rose-700"
+                      : "hover:bg-stone-50"
+                  }`}
+                >
+                  <Icon className="size-5" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        <div className="rounded-3xl border border-rose-100 bg-white p-6 shadow-sm">
+          {activeTab === "profile" && (
+            <div>
+              <h2 className="text-2xl font-bold">Thông tin cá nhân</h2>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <label>
+                  <span className="font-semibold">Họ và tên</span>
+                  <input
+                    defaultValue="Nguyễn Văn A"
+                    className="mt-2 w-full rounded-2xl border border-rose-100 px-4 py-3 outline-none"
+                  />
+                </label>
+                <label>
+                  <span className="font-semibold">Số điện thoại</span>
+                  <input
+                    defaultValue="0123456789"
+                    className="mt-2 w-full rounded-2xl border border-rose-100 px-4 py-3 outline-none"
+                  />
+                </label>
+                <label>
+                  <span className="font-semibold">Email</span>
+                  <input
+                    defaultValue="nguyenvana@email.com"
+                    className="mt-2 w-full rounded-2xl border border-rose-100 px-4 py-3 outline-none"
+                  />
+                </label>
+                <label>
+                  <span className="font-semibold">Ngày sinh</span>
+                  <input
+                    type="date"
+                    className="mt-2 w-full rounded-2xl border border-rose-100 px-4 py-3 outline-none"
+                  />
+                </label>
+              </div>
+
+              <button className="mt-6 rounded-full bg-rose-600 px-8 py-3 font-semibold text-white">
+                Cập nhật thông tin
+              </button>
+            </div>
+          )}
+
+          {activeTab === "orders" && (
+            <div>
+              <h2 className="text-2xl font-bold">Đơn hàng của tôi</h2>
+
+              <div className="mt-6 space-y-4">
+                {[1, 2, 3].map((item) => (
+                  <article
+                    key={item}
+                    className="rounded-2xl border border-rose-100 p-5"
                   >
-                    Cập Nhật Thông Tin
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {activeTab === "orders" && (
-              <div className="bg-white rounded-lg p-8">
-                <h2 className="text-2xl mb-6">Đơn Hàng Của Tôi</h2>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="border border-border rounded-lg p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 className="mb-1">Đơn hàng #DH00{i}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Ngày đặt: 2026-06-0{i}
-                          </p>
-                        </div>
-                        <div className="px-4 py-2 bg-green-100 text-green-600 rounded-full text-sm">
-                          Đã giao
-                        </div>
-                      </div>
-                      <p className="text-rose-600 text-xl">
-                        {(1250000 * i).toLocaleString()}₫
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === "addresses" && (
-              <div className="bg-white rounded-lg p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl">Địa Chỉ Của Tôi</h2>
-                  <button className="px-4 py-2 border border-rose-600 text-rose-600 rounded-lg hover:bg-rose-50">
-                    Thêm Địa Chỉ Mới
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  <div className="border border-border rounded-lg p-6">
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
-                        <h3 className="mb-2">Nguyễn Văn A</h3>
-                        <p className="text-sm text-muted-foreground mb-1">0123456789</p>
-                        <p className="text-sm text-muted-foreground">
-                          123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM
+                        <h3 className="font-bold">Đơn hàng #DH00{item}</h3>
+                        <p className="mt-1 text-sm text-stone-500">
+                          Ngày đặt: 2026-06-0{item}
                         </p>
                       </div>
-                      <span className="px-3 py-1 bg-rose-100 text-rose-600 text-sm rounded-full">
-                        Mặc định
+                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                        Đã giao
                       </span>
                     </div>
-                  </div>
-                </div>
+
+                    <p className="mt-4 font-bold text-rose-700">
+                      {(1250000 * item).toLocaleString("vi-VN")}₫
+                    </p>
+                  </article>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {activeTab === "addresses" && (
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <h2 className="text-2xl font-bold">Địa chỉ của tôi</h2>
+                <button className="rounded-full bg-rose-600 px-5 py-3 font-semibold text-white">
+                  Thêm địa chỉ mới
+                </button>
+              </div>
+
+              <article className="mt-6 rounded-2xl border border-rose-100 p-5">
+                <h3 className="font-bold">Nguyễn Văn A</h3>
+                <p className="mt-2 text-stone-600">0123456789</p>
+                <p className="mt-2 text-stone-600">
+                  123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM
+                </p>
+                <span className="mt-4 inline-flex rounded-full bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-700">
+                  Mặc định
+                </span>
+              </article>
+            </div>
+          )}
+
+          {activeTab === "wishlist" && (
+            <div>
+              <h2 className="text-2xl font-bold">Sản phẩm yêu thích</h2>
+              <p className="mt-3 text-stone-600">
+                Quản lý wishlist tại trang Yêu thích.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "settings" && (
+            <div>
+              <h2 className="text-2xl font-bold">Cài đặt</h2>
+              <div className="mt-6 space-y-4">
+                <label className="flex items-center justify-between rounded-2xl border border-rose-100 p-4">
+                  <span>Nhận email khuyến mãi</span>
+                  <input type="checkbox" defaultChecked />
+                </label>
+                <label className="flex items-center justify-between rounded-2xl border border-rose-100 p-4">
+                  <span>Thông báo đơn hàng</span>
+                  <input type="checkbox" defaultChecked />
+                </label>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

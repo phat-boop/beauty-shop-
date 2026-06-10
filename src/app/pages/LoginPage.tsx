@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Mail, Lock } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 interface LoginFormData {
@@ -10,6 +9,7 @@ interface LoginFormData {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -22,155 +22,102 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl mb-2">
-              Beauty<span className="text-rose-600">Shop</span>
-            </h1>
-            <p className="text-muted-foreground">Đăng nhập vào tài khoản của bạn</p>
-          </div>
+    <main className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-stone-100 px-4 py-10">
+      <section className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-2xl lg:grid-cols-2">
+        <div className="hidden bg-[#2b1813] p-12 text-white lg:block">
+          <Link to="/" className="text-3xl font-bold text-rose-200">
+            BeautyShop
+          </Link>
+          <h1 className="mt-20 text-5xl font-bold leading-tight">
+            Chào mừng bạn quay lại
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-white/70">
+            Đăng nhập để theo dõi đơn hàng, lưu sản phẩm yêu thích và nhận ưu đãi làm đẹp riêng cho bạn.
+          </p>
+        </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div>
-              <label htmlFor="email" className="block mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <div className="p-6 md:p-12">
+          <Link to="/" className="text-2xl font-bold text-rose-700 lg:hidden">
+            BeautyShop
+          </Link>
+
+          <h2 className="mt-8 text-3xl font-bold text-stone-950 lg:mt-0">
+            Đăng nhập
+          </h2>
+          <p className="mt-2 text-stone-600">Đăng nhập vào tài khoản của bạn.</p>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
+            <label className="block">
+              <span className="font-semibold">Email</span>
+              <div className="relative mt-2">
+                <Mail className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-stone-400" />
                 <input
-                  id="email"
                   type="email"
+                  className="w-full rounded-2xl border border-rose-100 py-4 pl-12 pr-4 outline-none focus:border-rose-300"
                   placeholder="you@example.com"
-                  className="w-full pl-11 pr-4 py-3 bg-input-background rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                   {...register("email", {
-                    required: "Email là bắt buộc",
+                    required: "Vui lòng nhập email",
                     pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      value: /\S+@\S+\.\S+/,
                       message: "Email không hợp lệ",
                     },
                   })}
                 />
               </div>
               {errors.email && (
-                <p className="text-destructive text-sm mt-1">{errors.email.message}</p>
+                <p className="mt-2 text-sm text-rose-600">{errors.email.message}</p>
               )}
-            </div>
+            </label>
 
-            <div>
-              <label htmlFor="password" className="block mb-2">
-                Mật khẩu
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <label className="block">
+              <span className="font-semibold">Mật khẩu</span>
+              <div className="relative mt-2">
+                <Lock className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-stone-400" />
                 <input
-                  id="password"
                   type="password"
+                  className="w-full rounded-2xl border border-rose-100 py-4 pl-12 pr-4 outline-none focus:border-rose-300"
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-4 py-3 bg-input-background rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                   {...register("password", {
-                    required: "Mật khẩu là bắt buộc",
+                    required: "Vui lòng nhập mật khẩu",
                     minLength: {
                       value: 6,
-                      message: "Mật khẩu phải có ít nhất 6 ký tự",
+                      message: "Mật khẩu tối thiểu 6 ký tự",
                     },
                   })}
                 />
               </div>
               {errors.password && (
-                <p className="text-destructive text-sm mt-1">
-                  {errors.password.message}
-                </p>
+                <p className="mt-2 text-sm text-rose-600">{errors.password.message}</p>
               )}
-            </div>
+            </label>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="rounded border-border text-rose-500 focus:ring-rose-500"
-                />
-                <span className="text-sm text-muted-foreground">Ghi nhớ đăng nhập</span>
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" />
+                Ghi nhớ đăng nhập
               </label>
-              <a href="#" className="text-sm text-rose-500 hover:text-rose-600">
+              <button type="button" className="font-semibold text-rose-700">
                 Quên mật khẩu?
-              </a>
+              </button>
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-rose-600 text-white py-3 rounded-lg hover:bg-rose-700 transition-colors"
-            >
-              Đăng Nhập
+            <button className="w-full rounded-full bg-rose-600 py-4 font-semibold text-white hover:bg-rose-700">
+              Đăng nhập
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Chưa có tài khoản?{" "}
-              <Link to="/dang-ky" className="text-rose-600 hover:text-rose-700">
-                Đăng ký ngay
-              </Link>
-            </p>
-          </div>
+          <p className="mt-6 text-center text-stone-600">
+            Chưa có tài khoản?{" "}
+            <Link to="/dang-ky" className="font-semibold text-rose-700">
+              Đăng ký ngay
+            </Link>
+          </p>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-muted-foreground">
-                  Hoặc đăng nhập với
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <button
-                type="button"
-                className="flex items-center justify-center gap-2 py-3 border border-border rounded-lg hover:bg-accent transition-colors"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                Google
-              </button>
-              <button
-                type="button"
-                className="flex items-center justify-center gap-2 py-3 border border-border rounded-lg hover:bg-accent transition-colors"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-                Facebook
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 text-center">
-          <Link to="/" className="text-sm text-muted-foreground hover:text-rose-600">
+          <Link to="/" className="mt-8 block text-center text-sm text-stone-500">
             ← Quay lại trang chủ
           </Link>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

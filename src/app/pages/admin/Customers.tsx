@@ -1,81 +1,127 @@
-import { Search, Eye, Mail } from "lucide-react";
-import { useState } from "react";
+import { Mail, Phone, Search } from "lucide-react";
+import { useMemo, useState } from "react";
 
 const customers = [
-  { id: 1, name: "Nguyễn Văn A", email: "nguyenvana@email.com", phone: "0123456789", orders: 12, spent: 15000000, joined: "2025-01-15" },
-  { id: 2, name: "Trần Thị B", email: "tranthib@email.com", phone: "0987654321", orders: 8, spent: 8500000, joined: "2025-03-22" },
-  { id: 3, name: "Lê Văn C", email: "levanc@email.com", phone: "0369852147", orders: 15, spent: 22000000, joined: "2024-11-10" },
-  { id: 4, name: "Phạm Thị D", email: "phamthid@email.com", phone: "0741258963", orders: 5, spent: 4200000, joined: "2026-02-18" },
+  {
+    id: 1,
+    name: "Nguyễn Văn A",
+    email: "a@example.com",
+    phone: "0901234567",
+    orders: 8,
+    spent: 12500000,
+    joinedAt: "2026-01-15",
+  },
+  {
+    id: 2,
+    name: "Trần Thị B",
+    email: "b@example.com",
+    phone: "0912345678",
+    orders: 4,
+    spent: 5860000,
+    joinedAt: "2026-02-20",
+  },
+  {
+    id: 3,
+    name: "Lê Văn C",
+    email: "c@example.com",
+    phone: "0923456789",
+    orders: 2,
+    spent: 3200000,
+    joinedAt: "2026-03-10",
+  },
 ];
 
+const formatPrice = (value: number) =>
+  new Intl.NumberFormat("vi-VN").format(value) + "₫";
+
 export default function AdminCustomers() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [query, setQuery] = useState("");
+
+  const filteredCustomers = useMemo(() => {
+    const keyword = query.toLowerCase().trim();
+
+    if (!keyword) return customers;
+
+    return customers.filter(
+      (customer) =>
+        customer.name.toLowerCase().includes(keyword) ||
+        customer.email.toLowerCase().includes(keyword) ||
+        customer.phone.includes(keyword)
+    );
+  }, [query]);
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Quản Lý Khách Hàng</h1>
-        <p className="text-muted-foreground">Tổng {customers.length} khách hàng</p>
+      <div>
+        <p className="font-semibold uppercase tracking-[0.25em] text-rose-600">
+          CRM
+        </p>
+        <h1 className="mt-2 text-3xl font-bold text-slate-950">
+          Quản lý khách hàng
+        </h1>
       </div>
 
-      <div className="bg-white rounded-lg p-6 border border-border mb-6">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+      <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="relative max-w-lg">
+          <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
           <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm kiếm khách hàng..."
-            className="w-full pl-12 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Tìm khách hàng..."
+            className="w-full rounded-full border border-slate-200 py-3 pl-12 pr-4 outline-none focus:border-rose-300"
           />
         </div>
-      </div>
 
-      <div className="bg-white rounded-lg border border-border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-border">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm">Khách Hàng</th>
-                <th className="px-6 py-4 text-left text-sm">Liên Hệ</th>
-                <th className="px-6 py-4 text-left text-sm">Đơn Hàng</th>
-                <th className="px-6 py-4 text-left text-sm">Tổng Chi Tiêu</th>
-                <th className="px-6 py-4 text-left text-sm">Ngày Tham Gia</th>
-                <th className="px-6 py-4 text-right text-sm">Thao Tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {customers.map((customer) => (
-                <tr key={customer.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center text-rose-600">
-                        {customer.name[0]}
-                      </div>
-                      <p className="font-medium">{customer.name}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm">{customer.email}</p>
-                    <p className="text-sm text-muted-foreground">{customer.phone}</p>
-                  </td>
-                  <td className="px-6 py-4 text-sm">{customer.orders} đơn</td>
-                  <td className="px-6 py-4 text-sm text-rose-600">{customer.spent.toLocaleString()}₫</td>
-                  <td className="px-6 py-4 text-sm">{customer.joined}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button className="p-2 hover:bg-blue-50 rounded text-blue-600">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 hover:bg-green-50 rounded text-green-600">
-                        <Mail className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-6 grid gap-4">
+          {filteredCustomers.map((customer) => (
+            <article
+              key={customer.id}
+              className="rounded-3xl border border-slate-100 p-5"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-5">
+                <div className="flex items-center gap-4">
+                  <div className="grid size-14 place-items-center rounded-full bg-rose-100 text-lg font-bold text-rose-700">
+                    {customer.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h2 className="font-bold">{customer.name}</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Tham gia: {customer.joinedAt}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-2 text-sm text-slate-600">
+                  <span className="flex items-center gap-2">
+                    <Mail className="size-4" />
+                    {customer.email}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Phone className="size-4" />
+                    {customer.phone}
+                  </span>
+                </div>
+
+                <div>
+                  <p className="text-sm text-slate-500">Đơn hàng</p>
+                  <p className="text-xl font-bold">{customer.orders}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-slate-500">Đã chi tiêu</p>
+                  <p className="text-xl font-bold text-rose-700">
+                    {formatPrice(customer.spent)}
+                  </p>
+                </div>
+              </div>
+            </article>
+          ))}
+
+          {filteredCustomers.length === 0 && (
+            <div className="py-12 text-center text-slate-500">
+              Không tìm thấy khách hàng phù hợp.
+            </div>
+          )}
         </div>
       </div>
     </div>
