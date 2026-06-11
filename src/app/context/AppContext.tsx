@@ -1,216 +1,286 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-import { products } from "../data/products";
-import type { CartItem, Product } from "../types";
+import { products as productCatalog } from "../data/products";
+import type {
+  CartItem,
+  CartItemView,
+  Language,
+  Product,
+  User,
+} from "../types";
 
-interface AppContextType {
-  products: Product[];
-  cart: CartItem[];
-  wishlist: Product[];
-  searchQuery: string;
-  selectedCategory: string;
-  sortBy: string;
-  isCartOpen: boolean;
-  isWishlistOpen: boolean;
-  cartCount: number;
-  cartSubtotal: number;
-  freeShippingThreshold: number;
-  shippingFee: number;
-  cartTotal: number;
-  couponCode: string;
-  discountAmount: number;
-  applyCoupon: (code: string) => void;
-  setSearchQuery: (query: string) => void;
-  setSelectedCategory: (category: string) => void;
-  setSortBy: (sort: string) => void;
-  addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
-  clearCart: () => void;
-  toggleWishlist: (product: Product) => void;
-  isInWishlist: (productId: number) => boolean;
-  setCartOpen: (open: boolean) => void;
-  setWishlistOpen: (open: boolean) => void;
+// ─────────────────────────────────────────────
+// COUPON CONFIG
+// Tách ra đây để dễ thay bằng API call sau này.
+// ─────────────────────────────────────────────
+
+const VALID_COUPONS = ["SAVE10", "BEAUTY50", "FREESHIP"] as const;
+
+function calcDiscount(couponCode: string, subtotal: number): number {
+  if (subtotal === 0) return 0;
+  if (couponCode === "SAVE10") return Math.round(subtotal * 0.1);
+  if (couponCode === "BEAUTY50") return Math.min(50_000, subtotal);
+  return 0;
 }
 
-const AppContext = createContext<AppContextType | null>(null);
-
-const CART_STORAGE_KEY = "beauty-shop-cart";
-const WISHLIST_STORAGE_KEY = "beauty-shop-wishlist";
-const COUPON_STORAGE_KEY = "beauty-shop-coupon";
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
 
 const FREE_SHIPPING_THRESHOLD = 1_500_000;
 const STANDARD_SHIPPING_FEE = 30_000;
 
+// ─────────────────────────────────────────────
+// STORAGE HELPERS
+// ─────────────────────────────────────────────
+
+const CART_STORAGE_KEY = "beauty-shop-cart";
+const WISHLIST_STORAGE_KEY = "beauty-shop-wishlist-ids";
+const COUPON_STORAGE_KEY = "beauty-shop-coupon";
+const LANGUAGE_STORAGE_KEY = "beauty-shop-language";
+const USER_STORAGE_KEY = "beauty-shop-user";
+
 function readStorage<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
-
   try {
-    const storedValue = window.localStorage.getItem(key);
-    return storedValue ? (JSON.parse(storedValue) as T) : fallback;
+    const stored = window.localStorage.getItem(key);
+    return stored ? (JSON.parse(stored) as T) : fallback;
   } catch {
     return fallback;
   }
 }
 
-function writeStorage<T>(key: string, value: T) {
+function writeStorage<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
-
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Ignore storage failures, such as private browsing restrictions.
+    // Ignore storage failures (private browsing, quota exceeded)
   }
 }
 
+// ─────────────────────────────────────────────
+// CONTEXT TYPE
+// ─────────────────────────────────────────────
+
+interface AppContextType {
+  // Catalog
+  products: Product[];
+
+  // Cart — raw items (productId + unitPrice + quantity)
+  cart: CartItem[];
+  // Cart — hydrated views for rendering
+  cartViews: CartItemView[];
+
+  // Cart derived
+  cartCount: number;
+  cartSubtotal: number;
+  freeShippingThreshold: number;
+  shippingFee: number;
+  cartTotal: number;
+
+  // Coupon
+  couponCode: string;
+  discountAmount: number;
+  applyCoupon: (code: string) => void;
+
+  // Cart actions
+  addToCart: (product: Product, quantity?: number) => void;
+  removeFromCart: (productId: number) => void;
+  updateQuantity: (productId: number, quantity: number) => void;
+  clearCart: () => void;
+
+  // Wishlist — stored as product IDs only
+  wishlistIds: number[];
+  wishlist: Product[];
+  toggleWishlist: (product: Product) => void;
+  isInWishlist: (productId: number) => boolean;
+
+  // Language
+  language: Language;
+  setLanguage: (lang: Language) => void;
+
+  // Auth
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
+}
+
+// ─────────────────────────────────────────────
+// CONTEXT
+// ─────────────────────────────────────────────
+
+const AppContext = createContext<AppContextType | null>(null);
+
 export function AppProvider({ children }: { children: ReactNode }) {
+  // ── Cart: lưu CartItem[] (productId + unitPrice + quantity) ──
   const [cart, setCart] = useState<CartItem[]>(() =>
     readStorage<CartItem[]>(CART_STORAGE_KEY, [])
   );
 
-  const [wishlist, setWishlist] = useState<Product[]>(() =>
-    readStorage<Product[]>(WISHLIST_STORAGE_KEY, [])
+  // ── Wishlist: lưu number[] (product IDs) để tối ưu storage ──
+  const [wishlistIds, setWishlistIds] = useState<number[]>(() =>
+    readStorage<number[]>(WISHLIST_STORAGE_KEY, [])
   );
 
-  const [couponCode, setCouponCode] = useState(() =>
+  const [couponCode, setCouponCode] = useState<string>(() =>
     readStorage<string>(COUPON_STORAGE_KEY, "")
   );
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [sortBy, setSortBy] = useState("featured");
-  const [isCartOpen, setCartOpen] = useState(false);
-  const [isWishlistOpen, setWishlistOpen] = useState(false);
+  const [language, setLanguageState] = useState<Language>(() =>
+    readStorage<Language>(LANGUAGE_STORAGE_KEY, "vi")
+  );
 
-  useEffect(() => {
-    writeStorage(CART_STORAGE_KEY, cart);
-  }, [cart]);
+  const [currentUser, setCurrentUserState] = useState<User | null>(() =>
+    readStorage<User | null>(USER_STORAGE_KEY, null)
+  );
 
-  useEffect(() => {
-    writeStorage(WISHLIST_STORAGE_KEY, wishlist);
-  }, [wishlist]);
+  // ── Persist side effects ──
+  useEffect(() => { writeStorage(CART_STORAGE_KEY, cart); }, [cart]);
+  useEffect(() => { writeStorage(WISHLIST_STORAGE_KEY, wishlistIds); }, [wishlistIds]);
+  useEffect(() => { writeStorage(COUPON_STORAGE_KEY, couponCode); }, [couponCode]);
 
-  useEffect(() => {
-    writeStorage(COUPON_STORAGE_KEY, couponCode);
-  }, [couponCode]);
+  // ── Setters ──
+  const setLanguage = useCallback((lang: Language) => {
+    setLanguageState(lang);
+    writeStorage(LANGUAGE_STORAGE_KEY, lang);
+  }, []);
 
-  const addToCart = (product: Product, quantity = 1) => {
+  const setCurrentUser = useCallback((user: User | null) => {
+    setCurrentUserState(user);
+    writeStorage(USER_STORAGE_KEY, user);
+  }, []);
+
+  // ── Cart actions ──
+  const addToCart = useCallback((product: Product, quantity = 1) => {
     setCart((prev) => {
-      const safeQuantity = Math.max(1, quantity);
-      const existing = prev.find((item) => item.id === product.id);
-
+      const safeQty = Math.max(1, quantity);
+      const existing = prev.find((item) => item.productId === product.id);
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + safeQuantity }
+          item.productId === product.id
+            ? { ...item, quantity: item.quantity + safeQty }
             : item
         );
       }
-
-      return [...prev, { ...product, quantity: safeQuantity }];
+      return [
+        ...prev,
+        {
+          productId: product.id,
+          unitPrice: product.price, // chốt giá tại thời điểm add
+          quantity: safeQty,
+        },
+      ];
     });
+  }, []);
 
-    setCartOpen(true);
-  };
+  const removeFromCart = useCallback((productId: number) => {
+    setCart((prev) => prev.filter((item) => item.productId !== productId));
+  }, []);
 
-  const removeFromCart = (productId: number) => {
-    setCart((prev) => prev.filter((item) => item.id !== productId));
-  };
+  const updateQuantity = useCallback(
+    (productId: number, quantity: number) => {
+      if (quantity <= 0) {
+        removeFromCart(productId);
+        return;
+      }
+      setCart((prev) =>
+        prev.map((item) =>
+          item.productId === productId ? { ...item, quantity } : item
+        )
+      );
+    },
+    [removeFromCart]
+  );
 
-  const updateQuantity = (productId: number, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
-      return;
-    }
-
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
-      )
-    );
-  };
-
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([]);
     setCouponCode("");
-  };
+  }, []);
 
-  const toggleWishlist = (product: Product) => {
-    setWishlist((prev) =>
-      prev.some((item) => item.id === product.id)
-        ? prev.filter((item) => item.id !== product.id)
-        : [...prev, product]
+  // ── Wishlist actions ──
+  const toggleWishlist = useCallback((product: Product) => {
+    setWishlistIds((prev) =>
+      prev.includes(product.id)
+        ? prev.filter((id) => id !== product.id)
+        : [...prev, product.id]
     );
-  };
+  }, []);
 
-  const isInWishlist = (productId: number) =>
-    wishlist.some((item) => item.id === productId);
+  const isInWishlist = useCallback(
+    (productId: number) => wishlistIds.includes(productId),
+    [wishlistIds]
+  );
 
+  // ── Coupon ──
+  const applyCoupon = useCallback((code: string) => {
+    const normalized = code.trim().toUpperCase();
+    setCouponCode(
+      normalized && (VALID_COUPONS as readonly string[]).includes(normalized)
+        ? normalized
+        : ""
+    );
+  }, []);
+
+  // ── Derived: hydrate cartViews từ catalog ──
+  const cartViews = useMemo<CartItemView[]>(() => {
+    return cart.flatMap((item) => {
+      const product = productCatalog.find((p) => p.id === item.productId);
+      if (!product) return []; // sản phẩm bị xóa khỏi catalog
+      return [
+        {
+          ...item,
+          product,
+          lineTotal: item.unitPrice * item.quantity,
+        },
+      ];
+    });
+  }, [cart]);
+
+  // ── Derived: wishlist Products ──
+  const wishlist = useMemo<Product[]>(
+    () => productCatalog.filter((p) => wishlistIds.includes(p.id)),
+    [wishlistIds]
+  );
+
+  // ── Derived: totals ──
   const cartCount = useMemo(
     () => cart.reduce((sum, item) => sum + item.quantity, 0),
     [cart]
   );
 
   const cartSubtotal = useMemo(
-    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [cart]
+    () => cartViews.reduce((sum, v) => sum + v.lineTotal, 0),
+    [cartViews]
   );
 
-  const baseShippingFee =
-    cartSubtotal === 0 || cartSubtotal >= FREE_SHIPPING_THRESHOLD
-      ? 0
-      : STANDARD_SHIPPING_FEE;
+  const discountAmount = useMemo(
+    () => calcDiscount(couponCode, cartSubtotal),
+    [couponCode, cartSubtotal]
+  );
 
-  const shippingFee = couponCode === "FREESHIP" ? 0 : baseShippingFee;
-
-  const discountAmount = useMemo(() => {
-    if (cartSubtotal === 0) return 0;
-
-    if (couponCode === "SAVE10") {
-      return Math.round(cartSubtotal * 0.1);
-    }
-
-    if (couponCode === "BEAUTY50") {
-      return Math.min(50_000, cartSubtotal);
-    }
-
-    return 0;
+  const shippingFee = useMemo(() => {
+    if (cartSubtotal === 0 || cartSubtotal >= FREE_SHIPPING_THRESHOLD) return 0;
+    return couponCode === "FREESHIP" ? 0 : STANDARD_SHIPPING_FEE;
   }, [cartSubtotal, couponCode]);
 
-  const cartTotal = Math.max(0, cartSubtotal + shippingFee - discountAmount);
+  const cartTotal = useMemo(
+    () => Math.max(0, cartSubtotal + shippingFee - discountAmount),
+    [cartSubtotal, shippingFee, discountAmount]
+  );
 
-  const applyCoupon = (code: string) => {
-    const normalizedCode = code.trim().toUpperCase();
-
-    if (!normalizedCode) {
-      setCouponCode("");
-      return;
-    }
-
-    if (["SAVE10", "BEAUTY50", "FREESHIP"].includes(normalizedCode)) {
-      setCouponCode(normalizedCode);
-      return;
-    }
-
-    setCouponCode("");
-  };
-
+  // ── Context value ──
   const value = useMemo<AppContextType>(
     () => ({
-      products,
+      products: productCatalog,
       cart,
-      wishlist,
-      searchQuery,
-      selectedCategory,
-      sortBy,
-      isCartOpen,
-      isWishlistOpen,
+      cartViews,
       cartCount,
       cartSubtotal,
       freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
@@ -219,44 +289,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
       couponCode,
       discountAmount,
       applyCoupon,
-      setSearchQuery,
-      setSelectedCategory,
-      setSortBy,
       addToCart,
       removeFromCart,
       updateQuantity,
       clearCart,
+      wishlistIds,
+      wishlist,
       toggleWishlist,
       isInWishlist,
-      setCartOpen,
-      setWishlistOpen,
+      language,
+      setLanguage,
+      currentUser,
+      setCurrentUser,
     }),
     [
       cart,
-      wishlist,
-      searchQuery,
-      selectedCategory,
-      sortBy,
-      isCartOpen,
-      isWishlistOpen,
+      cartViews,
       cartCount,
       cartSubtotal,
       shippingFee,
       cartTotal,
       couponCode,
       discountAmount,
+      applyCoupon,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      wishlistIds,
+      wishlist,
+      toggleWishlist,
+      isInWishlist,
+      language,
+      setLanguage,
+      currentUser,
+      setCurrentUser,
     ]
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
-export function useApp() {
+export function useApp(): AppContextType {
   const context = useContext(AppContext);
-
-  if (!context) {
-    throw new Error("useApp must be used within AppProvider");
-  }
-
+  if (!context) throw new Error("useApp must be used within AppProvider");
   return context;
 }

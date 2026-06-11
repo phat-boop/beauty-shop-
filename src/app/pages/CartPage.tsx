@@ -9,6 +9,7 @@ const formatPrice = (value: number) =>
 export default function CartPage() {
   const {
     cart,
+    cartViews,
     cartSubtotal,
     shippingFee,
     cartTotal,
@@ -69,14 +70,14 @@ export default function CartPage() {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
-          {cart.map((item) => (
+          {cartViews.map((item) => (
             <article
-              key={item.id}
+              key={item.productId}
               className="flex gap-4 rounded-3xl border border-rose-100 bg-white p-4 shadow-sm"
             >
               <img
-                src={item.image}
-                alt={item.nameVi}
+                src={item.product.image}
+                alt={item.product.nameVi}
                 className="size-28 rounded-2xl object-cover"
               />
 
@@ -84,16 +85,16 @@ export default function CartPage() {
                 <div className="flex gap-3">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-500">
-                      {item.brand}
+                      {item.product.brand}
                     </p>
                     <h2 className="mt-1 font-bold text-stone-950">
-                      {item.nameVi}
+                      {item.product.nameVi}
                     </h2>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => removeFromCart(item.productId)}
                     className="ml-auto rounded-full p-2 text-stone-400 hover:bg-rose-50 hover:text-rose-700"
                     aria-label="Xóa sản phẩm"
                   >
@@ -105,7 +106,7 @@ export default function CartPage() {
                   <div className="flex items-center rounded-full border border-rose-100">
                     <button
                       type="button"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                       className="p-2"
                     >
                       <Minus className="size-4" />
@@ -117,7 +118,7 @@ export default function CartPage() {
 
                     <button
                       type="button"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                       className="p-2"
                     >
                       <Plus className="size-4" />
@@ -125,7 +126,7 @@ export default function CartPage() {
                   </div>
 
                   <strong className="text-rose-700">
-                    {formatPrice(item.price * item.quantity)}
+                    {formatPrice(item.lineTotal)}
                   </strong>
                 </div>
               </div>

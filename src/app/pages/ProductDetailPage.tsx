@@ -50,7 +50,10 @@ export default function ProductDetailPage() {
   const { id } = useParams();
   const { addToCart, toggleWishlist, isInWishlist } = useApp();
 
-  const product = products.find((item) => item.id === Number(id));
+  const productId = Number(id);
+  const product = Number.isNaN(productId)
+    ? undefined
+    : products.find((item) => item.id === productId);
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -83,8 +86,8 @@ export default function ProductDetailPage() {
     if (!product) return [];
 
     return recentlyViewedIds
-      .filter((productId) => productId !== product.id)
-      .map((productId) => products.find((item) => item.id === productId))
+      .filter((recentId) => recentId !== product.id)
+      .map((recentId) => products.find((item) => item.id === recentId))
       .filter((item): item is (typeof products)[number] => Boolean(item))
       .slice(0, 4);
   }, [product, recentlyViewedIds]);

@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import {
   Flame,
@@ -30,12 +30,24 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        setSearchFocused(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const searchResults = useMemo(() => {
     const keyword = query.trim().toLowerCase();
-
     if (!keyword) return [];
-
     return products
       .filter(
         (product) =>
@@ -49,10 +61,8 @@ export default function Header() {
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     const trimmedQuery = query.trim();
     if (!trimmedQuery) return;
-
     navigate(`/tim-kiem?q=${encodeURIComponent(trimmedQuery)}`);
     setQuery("");
     setSearchFocused(false);
@@ -71,238 +81,163 @@ export default function Header() {
     setSearchFocused(false);
   };
 
-  const shouldShowSuggestions =
-    searchFocused && query.trim().length > 0;
-
-  const renderSearchSuggestions = () => {
-    if (!shouldShowSuggestions) return null;
-
-    return (
-      <div className="absolute left-0 right-0 top-full z-50 mt-3 overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-2xl">
-        {searchResults.length > 0 ? (
-          <>
-            <div className="border-b border-rose-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-stone-400">
-              Gợi ý sản phẩm
-            </div>
-
-            {searchResults.map((product) => (
-              <Link
-                key={product.id}
-                to={`/san-pham/${product.id}`}
-                onClick={closeSearch}
-                className="flex items-center gap-3 border-b border-rose-50 px-4 py-3 transition hover:bg-rose-50"
-              >
-                <img
-                  src={product.image}
-                  alt={product.nameVi}
-                  className="size-14 rounded-2xl object-cover"
-                />
-
-                <div className="min-w-0 flex-1">
-                  <p className="line-clamp-1 font-semibold text-stone-950">
-                    {product.nameVi}
-                  </p>
-                  <p className="mt-1 text-xs text-stone-500">
-                    {product.brand}
-                  </p>
-                </div>
-
-                <span className="shrink-0 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
-                  Xem
-                </span>
-              </Link>
-            ))}
-
-            <button
-              type="button"
-              onClick={() => handleQuickSearch(query)}
-              className="flex w-full items-center justify-center gap-2 px-4 py-3 font-semibold text-rose-700 hover:bg-rose-50"
-            >
-              <Search className="size-4" />
-              Xem tất cả kết quả cho “{query.trim()}”
-            </button>
-          </>
-        ) : (
-          <div className="p-5">
-            <p className="font-semibold text-stone-950">
-              Không tìm thấy sản phẩm phù hợp
-            </p>
-            <p className="mt-1 text-sm text-stone-500">
-              Hãy thử tìm “Serum”, “Vitamin C” hoặc “Dưỡng Ẩm”.
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
-    <header className="sticky top-0 z-50 border-b border-rose-100 bg-white/95 backdrop-blur">
-      <div className="bg-[#2b1813] px-4 py-2 text-center text-sm text-white">
-        <span className="inline-flex items-center justify-center gap-2">
-          <Sparkles className="size-4 text-rose-200" />
-          Miễn phí vận chuyển cho đơn hàng từ 1.500.000₫
+    <header className="sticky top-0 z-50 border-b border-rose-100 bg-white/95 backdrop-blur-md">
+      <div className="bg-gradient-to-r from-rose-600 to-pink-500 py-2 text-center text-xs font-medium tracking-wide text-white">
+        <span className="inline-flex items-center gap-1.5">
+          <Sparkles className="size-3.5 animate-pulse" />
+          Miễn phí vận chuyển cho đơn hàng từ 1.500.000₫!
         </span>
       </div>
 
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4">
-        <Link
-          to="/"
-          className="shrink-0 text-2xl font-bold tracking-tight text-rose-700"
-        >
-          Beauty<span className="text-[#2b1813]">Shop</span>
-        </Link>
-
-        <form
-          onSubmit={handleSearch}
-          className="relative hidden flex-1 md:block"
-        >
-          <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-stone-400" />
-
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onFocus={() => setSearchFocused(true)}
-            placeholder="Tìm kiếm sản phẩm, thương hiệu..."
-            className="w-full rounded-full border border-rose-100 bg-rose-50/60 py-3 pl-12 pr-4 outline-none transition focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100"
-          />
-
-          {renderSearchSuggestions()}
-        </form>
-
-        <div className="ml-auto flex items-center gap-2">
-          <Link
-            to="/yeu-thich"
-            className="relative rounded-full p-2 transition hover:bg-rose-50"
-            aria-label="Danh sách yêu thích"
-          >
-            <Heart className="size-5" />
-            {wishlist.length > 0 && (
-              <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-rose-600 px-1.5 text-xs font-bold text-white">
-                {wishlist.length}
-              </span>
-            )}
-          </Link>
-
-          <Link
-            to="/gio-hang"
-            className="relative rounded-full p-2 transition hover:bg-rose-50"
-            aria-label="Giỏ hàng"
-          >
-            <ShoppingBag className="size-5" />
-            {cartCount > 0 && (
-              <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-rose-600 px-1.5 text-xs font-bold text-white">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-
-          <Link
-            to="/tai-khoan"
-            className="hidden rounded-full p-2 transition hover:bg-rose-50 md:block"
-            aria-label="Tài khoản"
-          >
-            <User className="size-5" />
-          </Link>
-
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="flex h-20 items-center justify-between gap-4">
           <button
-            type="button"
-            onClick={() => setMobileMenuOpen((open) => !open)}
-            className="rounded-full p-2 transition hover:bg-rose-50 md:hidden"
+            onClick={() => setMobileMenuOpen(true)}
+            className="rounded-lg p-2 text-stone-600 hover:bg-stone-50 lg:hidden"
             aria-label="Mở menu"
           >
-            {mobileMenuOpen ? (
-              <X className="size-5" />
-            ) : (
-              <Menu className="size-5" />
-            )}
+            <Menu className="size-6" />
           </button>
+
+          <Link to="/" className="text-2xl font-bold tracking-tight text-rose-700">
+            Beauty<span className="text-[#2b1813]">Shop</span>
+          </Link>
+
+          <nav className="hidden lg:flex lg:gap-8">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  `text-sm font-semibold tracking-wide transition-colors duration-200 hover:text-rose-600 ${
+                    isActive ? "text-rose-600" : "text-stone-600"
+                  }`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div ref={searchRef} className="relative hidden max-w-md flex-1 md:block">
+            <form onSubmit={handleSearch} className="relative">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                placeholder="Tìm kiếm sản phẩm..."
+                className="w-full rounded-full border border-stone-200 bg-stone-50 py-2.5 pl-11 pr-10 text-sm outline-none focus:border-rose-400 focus:bg-white"
+              />
+              <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
+              {query && (
+                <button
+                  type="button"
+                  onClick={closeSearch}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </form>
+
+            {searchFocused && (
+              <div className="absolute top-full mt-2 w-full rounded-2xl border border-stone-100 bg-white p-4 shadow-xl">
+                {query.trim().length === 0 ? (
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-stone-400">Tìm kiếm phổ biến</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {quickSearches.map((item) => (
+                        <button
+                          key={item}
+                          onClick={() => handleQuickSearch(item)}
+                          className="inline-flex items-center gap-1 rounded-full bg-stone-50 px-3 py-1 text-xs text-stone-600 hover:bg-rose-50 hover:text-rose-600"
+                        >
+                          <Flame className="size-3 text-rose-500" />
+                          {item}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-stone-400">Sản phẩm gợi ý</p>
+                    <div className="mt-2 space-y-1">
+                      {searchResults.length > 0 ? (
+                        searchResults.map((product) => (
+                          <button
+                            key={product.id}
+                            onClick={() => handleQuickSearch(product.nameVi)}
+                            className="flex w-full items-center gap-3 rounded-xl p-2 text-left text-sm hover:bg-stone-50"
+                          >
+                            <div className="size-10 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100">
+                              <img src={product.image} alt={product.nameVi} className="h-full w-full object-cover" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-stone-900">{product.nameVi}</p>
+                              <p className="text-xs text-stone-400">{product.brand}</p>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="py-2 text-center text-sm text-stone-400">Không tìm thấy kết quả.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link to="/tai-khoan" className="rounded-full p-2.5 text-stone-600 hover:text-rose-600">
+              <User className="size-5" />
+            </Link>
+
+            <Link to="/yeu-thich" className="relative rounded-full p-2.5 text-stone-600 hover:text-rose-600">
+              <Heart className="size-5" />
+              {wishlist.length > 0 && (
+                <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white ring-2 ring-white">
+                  {wishlist.length}
+                </span>
+              )}
+            </Link>
+
+            <Link to="/gio-hang" className="relative rounded-full p-2.5 text-stone-600 hover:text-rose-600">
+              <ShoppingBag className="size-5" />
+              {cartCount > 0 && (
+                <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white ring-2 ring-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </div>
         </div>
       </div>
 
-      <nav className="hidden border-t border-rose-50 md:block">
-        <div className="mx-auto flex max-w-7xl items-center gap-8 px-4 py-3 text-sm font-medium">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                isActive
-                  ? "text-rose-700"
-                  : "text-stone-700 hover:text-rose-700"
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
-
-          <Link
-            to="/san-pham?sale=true"
-            className="ml-auto inline-flex items-center gap-2 rounded-full bg-rose-50 px-4 py-2 font-semibold text-rose-700 hover:bg-rose-100"
-          >
-            <Flame className="size-4 fill-rose-600 text-rose-600" />
-            Flash Sale
-          </Link>
-        </div>
-      </nav>
-
       {mobileMenuOpen && (
-        <div className="border-t border-rose-100 bg-white px-4 py-4 md:hidden">
-          <form onSubmit={handleSearch} className="relative mb-4">
-            <Search className="absolute left-4 top-6 size-5 -translate-y-1/2 text-stone-400" />
-
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onFocus={() => setSearchFocused(true)}
-              placeholder="Tìm kiếm..."
-              className="w-full rounded-full border border-rose-100 bg-rose-50 py-3 pl-12 pr-4 outline-none"
-            />
-
-            {renderSearchSuggestions()}
-          </form>
-
-          <div className="mb-4 flex flex-wrap gap-2">
-            {quickSearches.map((keyword) => (
-              <button
-                key={keyword}
-                type="button"
-                onClick={() => handleQuickSearch(keyword)}
-                className="rounded-full bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700"
-              >
-                {keyword}
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          <div className="fixed bottom-0 left-0 top-0 w-full max-w-xs bg-white p-6 shadow-2xl flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <span className="text-xl font-bold text-rose-700">Menu</span>
+              <button onClick={() => setMobileMenuOpen(false)} className="text-stone-500">
+                <X className="size-5" />
               </button>
-            ))}
-          </div>
-
-          <div className="grid gap-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMobileMenuOpen(false)}
-                className="rounded-xl px-3 py-2 hover:bg-rose-50"
-              >
-                {link.label}
-              </Link>
-            ))}
-
-            <Link
-              to="/san-pham?sale=true"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 rounded-xl px-3 py-2 font-semibold text-rose-700 hover:bg-rose-50"
-            >
-              <Flame className="size-4 fill-rose-600 text-rose-600" />
-              Flash Sale
-            </Link>
-
-            <Link
-              to="/dang-nhap"
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-xl px-3 py-2 hover:bg-rose-50"
-            >
-              Đăng nhập
-            </Link>
+            </div>
+            <nav className="flex flex-col gap-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-base font-semibold text-stone-700 hover:text-rose-600"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </div>
       )}

@@ -18,11 +18,8 @@ function figmaAssetResolver() {
 }
 
 export default defineConfig({
-  plugins: [
-    figmaAssetResolver(),
-    react(),
-    tailwindcss(),
-  ],
+  base: "/beauty-shop-/",
+  plugins: [figmaAssetResolver(), react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

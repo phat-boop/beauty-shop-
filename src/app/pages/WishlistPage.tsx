@@ -79,7 +79,7 @@ export default function WishlistPage() {
 
               <button
                 type="button"
-                onClick={() => addToCart(product)}
+                onClick={() => addToCart(product, 1)}
                 className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-rose-600 py-3 font-semibold text-white"
               >
                 <ShoppingCart className="size-5" />

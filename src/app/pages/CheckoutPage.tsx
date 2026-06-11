@@ -10,12 +10,10 @@ import {
   Truck,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import type { OrderLineItem, PaymentMethod, ShippingMethod } from "../types";
 
 const formatPrice = (value: number) =>
   new Intl.NumberFormat("vi-VN").format(value) + "₫";
-
-type PaymentMethod = "cod" | "bank" | "wallet";
-type ShippingMethod = "standard" | "express";
 
 interface CheckoutForm {
   fullName: string;
@@ -44,6 +42,7 @@ export default function CheckoutPage() {
 
   const {
     cart,
+    cartViews,
     cartSubtotal,
     shippingFee,
     cartTotal,
@@ -80,12 +79,13 @@ export default function CheckoutPage() {
   const handleApplyCoupon = () => {
     const normalizedCode = couponInput.trim().toUpperCase();
 
-    applyCoupon(normalizedCode);
-
     if (!normalizedCode) {
+      applyCoupon("");
       setCouponMessage("Vui lòng nhập mã giảm giá.");
       return;
     }
+
+    applyCoupon(normalizedCode);
 
     if (["SAVE10", "BEAUTY50", "FREESHIP"].includes(normalizedCode)) {
       setCouponMessage(`Đã áp dụng mã ${normalizedCode}.`);
@@ -116,8 +116,57 @@ export default function CheckoutPage() {
     }
 
     setFormError("");
+
+    const orderItems: OrderLineItem[] = cartViews.map((item) => ({
+      productId: item.productId,
+      nameVi: item.product.nameVi,
+      image: item.product.image,
+      brand: item.product.brand,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+      lineTotal: item.lineTotal,
+    }));
+
+    const order = {
+      id: crypto.randomUUID(),
+      items: orderItems,
+      subtotal: cartSubtotal,
+      shippingFee: shippingFee + expressShippingFee,
+      discountAmount,
+      total: finalTotal,
+      couponCode,
+      paymentMethod,
+      shippingMethod,
+      estimatedDelivery,
+      status: "pending" as const,
+      note: form.note.trim(),
+      shippingAddress: {
+        fullName: form.fullName.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        address: form.address.trim(),
+        ward: form.ward.trim(),
+        district: form.district.trim(),
+        city: form.city.trim(),
+      },
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const existing = JSON.parse(
+        localStorage.getItem("beauty-shop-orders") ?? "[]"
+      ) as typeof order[];
+
+      localStorage.setItem(
+        "beauty-shop-orders",
+        JSON.stringify([order, ...existing])
+      );
+    } catch {
+      // Bỏ qua nếu localStorage không khả dụng
+    }
+
     clearCart();
-    navigate("/dat-hang-thanh-cong");
+    navigate(`/dat-hang-thanh-cong?orderId=${order.id}`);
   };
 
   if (cart.length === 0) {
@@ -168,6 +217,7 @@ export default function CheckoutPage() {
                 placeholder="Họ và tên"
                 className="rounded-2xl border border-rose-100 px-4 py-3 outline-none focus:border-rose-300"
               />
+
               <input
                 value={form.phone}
                 onChange={(event) =>
@@ -176,6 +226,7 @@ export default function CheckoutPage() {
                 placeholder="Số điện thoại"
                 className="rounded-2xl border border-rose-100 px-4 py-3 outline-none focus:border-rose-300"
               />
+
               <input
                 value={form.email}
                 onChange={(event) =>
@@ -184,6 +235,7 @@ export default function CheckoutPage() {
                 placeholder="Email"
                 className="rounded-2xl border border-rose-100 px-4 py-3 outline-none focus:border-rose-300"
               />
+
               <input
                 value={form.city}
                 onChange={(event) =>
@@ -192,6 +244,7 @@ export default function CheckoutPage() {
                 placeholder="Tỉnh / Thành phố"
                 className="rounded-2xl border border-rose-100 px-4 py-3 outline-none focus:border-rose-300"
               />
+
               <input
                 value={form.district}
                 onChange={(event) =>
@@ -200,6 +253,7 @@ export default function CheckoutPage() {
                 placeholder="Quận / Huyện"
                 className="rounded-2xl border border-rose-100 px-4 py-3 outline-none focus:border-rose-300"
               />
+
               <input
                 value={form.ward}
                 onChange={(event) =>
@@ -208,71 +262,78 @@ export default function CheckoutPage() {
                 placeholder="Phường / Xã"
                 className="rounded-2xl border border-rose-100 px-4 py-3 outline-none focus:border-rose-300"
               />
-              <textarea
+
+              <input
                 value={form.address}
                 onChange={(event) =>
                   updateFormField("address", event.target.value)
                 }
-                placeholder="Địa chỉ cụ thể"
-                className="min-h-28 rounded-2xl border border-rose-100 px-4 py-3 outline-none focus:border-rose-300 md:col-span-2"
+                placeholder="Số nhà, tên đường"
+                className="rounded-2xl border border-rose-100 px-4 py-3 outline-none focus:border-rose-300 md:col-span-2"
               />
+
               <textarea
                 value={form.note}
-                onChange={(event) => updateFormField("note", event.target.value)}
-                placeholder="Ghi chú cho đơn hàng, ví dụ: giao giờ hành chính"
-                className="min-h-24 rounded-2xl border border-rose-100 px-4 py-3 outline-none focus:border-rose-300 md:col-span-2"
+                onChange={(event) =>
+                  updateFormField("note", event.target.value)
+                }
+                placeholder="Ghi chú đơn hàng (tùy chọn)"
+                rows={3}
+                className="rounded-2xl border border-rose-100 px-4 py-3 outline-none focus:border-rose-300 md:col-span-2"
               />
             </div>
 
             {formError && (
-              <p className="mt-4 rounded-2xl bg-rose-50 p-4 text-sm font-semibold text-rose-700">
-                {formError}
-              </p>
+              <p className="mt-3 text-sm text-rose-600">{formError}</p>
             )}
           </section>
 
           <section className="rounded-3xl border border-rose-100 bg-white p-6 shadow-sm">
             <h2 className="flex items-center gap-2 text-xl font-bold">
               <Truck className="size-5 text-rose-600" />
-              Phương thức giao hàng
+              Phương thức vận chuyển
             </h2>
 
             <div className="mt-5 grid gap-3">
-              <label className="flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-rose-100 p-4">
-                <div className="flex gap-3">
+              <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-rose-100 p-4">
+                <div className="flex items-center gap-3">
                   <input
                     type="radio"
                     name="shipping"
                     checked={shippingMethod === "standard"}
                     onChange={() => setShippingMethod("standard")}
-                    className="mt-1"
                   />
+
                   <div>
                     <p className="font-semibold">Giao hàng tiêu chuẩn</p>
                     <p className="mt-1 text-sm text-stone-500">
-                      Dự kiến {estimatedDelivery}
+                      Dự kiến 2-4 ngày làm việc
                     </p>
                   </div>
                 </div>
-                <strong>{shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}</strong>
+
+                <strong>
+                  {shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}
+                </strong>
               </label>
 
-              <label className="flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-rose-100 p-4">
-                <div className="flex gap-3">
+              <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-rose-100 p-4">
+                <div className="flex items-center gap-3">
                   <input
                     type="radio"
                     name="shipping"
                     checked={shippingMethod === "express"}
                     onChange={() => setShippingMethod("express")}
-                    className="mt-1"
                   />
+
                   <div>
-                    <p className="font-semibold">Giao nhanh ưu tiên</p>
+                    <p className="font-semibold">Giao hàng nhanh</p>
                     <p className="mt-1 text-sm text-stone-500">
                       Dự kiến 1-2 ngày làm việc
                     </p>
                   </div>
                 </div>
+
                 <strong>{formatPrice(25000)}</strong>
               </label>
             </div>
@@ -348,21 +409,26 @@ export default function CheckoutPage() {
           <h2 className="text-xl font-bold">Đơn hàng của bạn</h2>
 
           <div className="mt-5 space-y-4">
-            {cart.map((item) => (
-              <div key={item.id} className="flex gap-3">
+            {cartViews.map((item) => (
+              <div key={item.productId} className="flex gap-3">
                 <img
-                  src={item.image}
-                  alt={item.nameVi}
+                  src={item.product.image}
+                  alt={item.product.nameVi}
                   className="size-16 rounded-2xl object-cover"
                 />
 
                 <div className="flex-1">
-                  <h3 className="line-clamp-1 font-semibold">{item.nameVi}</h3>
+                  <h3 className="line-clamp-1 font-semibold">
+                    {item.product.nameVi}
+                  </h3>
+                  <p className="text-sm text-stone-500">
+                    {item.product.brand}
+                  </p>
                   <p className="text-sm text-stone-500">SL: {item.quantity}</p>
                 </div>
 
                 <strong className="text-rose-700">
-                  {formatPrice(item.price * item.quantity)}
+                  {formatPrice(item.lineTotal)}
                 </strong>
               </div>
             ))}

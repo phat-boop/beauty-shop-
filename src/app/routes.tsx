@@ -43,6 +43,7 @@ export const router = createBrowserRouter([
       { path: "tim-kiem", Component: SearchPage },
       { path: "blog", Component: BlogPage },
       { path: "blog/:id", Component: BlogDetailPage },
+      { path: "dat-hang-thanh-cong", Component: OrderSuccessPage },
     ],
   },
   {
@@ -70,8 +71,4 @@ export const router = createBrowserRouter([
     path: "*",
     Component: NotFound,
   },
-  {
-  path: "dat-hang-thanh-cong",
-  Component: OrderSuccessPage,
-}
 ]);
