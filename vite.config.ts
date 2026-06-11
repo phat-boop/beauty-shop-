@@ -18,7 +18,7 @@ function figmaAssetResolver() {
 }
 
 export default defineConfig({
-  base: "/beauty-shop-/",
+  base: "/",
   plugins: [figmaAssetResolver(), react(), tailwindcss()],
   resolve: {
     alias: {
