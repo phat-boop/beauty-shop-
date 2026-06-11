@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router";
 import Layout from "./layouts/Layout";
 import AdminLayout from "./layouts/AdminLayout";
 
+import OrderSuccessPage from "./pages/OrderSuccessPage";
 import HomePage from "./pages/HomePage";
 import ProductListingPage from "./pages/ProductListingPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
@@ -69,4 +70,8 @@ export const router = createBrowserRouter([
     path: "*",
     Component: NotFound,
   },
+  {
+  path: "dat-hang-thanh-cong",
+  Component: OrderSuccessPage,
+}
 ]);

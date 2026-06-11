@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prisma:studio": "prisma studio",
+    "prisma:migrate": "prisma migrate dev",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
@@ -75,7 +77,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "4.7.0",
     "tailwindcss": "4.1.12",
-    "typescript": "^5.6.3",
+    "typescript": "^5.9.3",
     "vite": "6.3.5"
   },
   "pnpm": {
